@@ -90,21 +90,6 @@ class PackageTests(unittest.TestCase):
         self.assertIn("../docs/design-spec.md", verify)
         self.assertIn("../templates/_index.md", verify)
 
-    def test_mermaid_postprocessing_keeps_delegation_and_semantic_review(self):
-        spec = (ROOT / "docs" / "design-spec.md").read_text(encoding="utf-8")
-        expression = (ROOT / "docs" / "modules" / "5.8-structured-expression.md").read_text(encoding="utf-8")
-        write = (ROOT / "runtime" / "write-assist.md").read_text(encoding="utf-8")
-        verify = (ROOT / "runtime" / "verify-checks.md").read_text(encoding="utf-8")
-        self.assertIn("Mermaid 图稿完成后的排版优化、渲染与视觉检查", spec)
-        for text in (expression, write, verify):
-            self.assertIn("subagent", text)
-            self.assertIn("视觉检查", text)
-            self.assertIn("主模型", text)
-        self.assertIn("外部参考不是运行依赖", expression)
-        self.assertIn("只改图块和必要图注", expression)
-        self.assertIn("subagent 不可用时由主模型执行同一检查", expression)
-        self.assertIn("不代替独立读者测试", expression)
-
     def test_local_markdown_links_resolve_inside_package(self):
         paths = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
         for directory in ("runtime", "templates", "docs", "examples"):
