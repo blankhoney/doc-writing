@@ -40,31 +40,37 @@ doc-writing 是由入口、写作规则、类型模板和候选扫描器组成�
 下图展示写作主体及其依赖。箭头表示请求、资料或结果的流向；包内文件提供指引，由当前会话的主模型执行。
 
 ```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "linear", "nodeSpacing": 30, "rankSpacing": 55}}}%%
 flowchart TB
-    user[使用者] -->|手动调用| entry[SKILL.md 入口]
-    subgraph package[技能包资源]
-        entry
-        rules[主规格与规则模块]
-        templates[类型模板与示例来源]
-        assist[编写与验证指引]
+    user["使用者"] -->|手动调用| entry
+    subgraph package["技能包资源（文件指引）"]
+        entry["SKILL.md 入口"]
+        rules["主规格与规则模块"]
+        templates["类型模板与示例来源"]
+        assist["编写与验证指引"]
     end
-    entry -->|任务流程| model[当前会话的主模型]
+    entry -->|任务流程| model
     rules -->|写作约束| model
-    templates -->|结构、示例用途与类型验证| model
+    templates -->|结构、示例用途<br/>与类型验证| model
     assist -->|阶段指引| model
-    evidence[目标项目材料] -->|事实依据| model
-    model -->|编写与修正| document[目标项目文档]
+    evidence["目标项目材料"] -->|事实依据| model
+    model["当前会话的主模型"] -->|编写与修正| document["目标项目文档"]
 ```
 
 验证关系单独展开，避免将包内资源依赖和修正反馈挤在同一张图中：
 
 ```mermaid
+%%{init: {"theme": "neutral", "flowchart": {"curve": "linear", "nodeSpacing": 40, "rankSpacing": 65}}}%%
 flowchart LR
-    rules[主规格 G1 清单] -->|字面词项| lint[包内候选扫描器]
-    document[目标文档] -->|读取文件| lint
-    lint -->|候选位置| model[主模型]
+    subgraph inputs["扫描输入"]
+        rules["主规格 G1 清单"]
+        document["目标文档"]
+    end
+    rules -->|字面词项| lint["包内候选扫描器"]
+    document -->|读取文件| lint
+    lint -->|候选位置| model["主模型"]
     model -->|修正| document
-    document -->|关键文档阅读| reader[独立读者]
+    document -->|关键文档阅读| reader["独立读者<br/>（按需启动）"]
     model -->|读者角色与问题| reader
     reader -->|阅读反馈| model
 ```
