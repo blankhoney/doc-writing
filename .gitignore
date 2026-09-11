@@ -1,0 +1,34 @@
+# 操作系统与编辑器缓存
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Python 缓存和本地环境
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# 本地凭据和安装配置
+.env
+.env.*
+!.env.example
+!.env.sample
+/.claude/
+
+# 临时资料和构建产物
+*.log
+/tmp/
+/.tmp/
+/dist/
+/build/
+/experiments/
+/references/
+/docs/research/
