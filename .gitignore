@@ -22,6 +22,8 @@ htmlcov/
 !.env.example
 !.env.sample
 /.claude/
+/.codex/
+/.agents/
 
 # 临时资料和构建产物
 *.log

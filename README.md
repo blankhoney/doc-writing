@@ -1,3 +1,7 @@
+<p>
+  <img src="assets/doc-writing-logo.png" alt="doc-writing 黑白笔记本与笔标志" width="64" height="64">
+</p>
+
 # doc-writing
 
 面向 Claude Code 的中文技术文档写作 skill。给出材料和目标，助手按文档类型组织内容、核对事实、编写正文，并完成表达与结构检查。
