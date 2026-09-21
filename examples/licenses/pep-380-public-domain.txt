@@ -1,0 +1,11 @@
+PEP: 380
+Title: Syntax for Delegating to a Subgenerator
+Author: Gregory Ewing <greg.ewing@canterbury.ac.nz>
+Source: https://github.com/python/peps/blob/b39aefe6614b4e8a925d07c4b3ed47e147236dbe/peps/pep-0380.rst
+
+以上四行为本包为定位来源添加；以下为 PEP 380 原文 "Copyright" 一节，逐字照录。
+
+Copyright
+=========
+
+This document has been placed in the public domain.

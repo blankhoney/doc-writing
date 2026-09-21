@@ -50,11 +50,19 @@ class PackageTests(unittest.TestCase):
     def test_entry_resources_are_real_and_portable(self):
         text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         resources = set(re.findall(r"\$\{CLAUDE_SKILL_DIR\}/([a-zA-Z0-9_./-]+\.(?:md|py))", text))
-        self.assertTrue({"docs/design-spec.md", "templates/_index.md", "runtime/write-assist.md",
-                         "runtime/verify-checks.md", "runtime/doc-lint.py", "examples/SOURCES.md"} <= resources)
+        resources |= {unquote(link) for link in re.findall(r"\]\(([^)\s#]+)\)", text)}
+        # 手动入口必须指向实际阶段入口、单一规则源、脚本和模板索引。
+        self.assertTrue({"docs/design-spec.md", "templates/_index.md", "runtime/prepare.md",
+                         "runtime/research.md", "runtime/write-assist.md", "runtime/verify-checks.md",
+                         "docs/modules/constraints-common.md", "docs/modules/constraints-writing.md",
+                         "docs/modules/constraints-architecture.md", "runtime/doc-lint.py"} <= resources)
+        # 示例来源清单只在编写阶段按需读取，不由入口表重复分发。
+        self.assertIn("../examples/SOURCES.md",
+                      (ROOT / "runtime" / "write-assist.md").read_text(encoding="utf-8"))
         for resource in resources:
             with self.subTest(resource=resource):
-                self.assertTrue((ROOT / resource).is_file())
+                self.assertEqual(urlsplit(resource).scheme, "")
+                self.assertTrue((ROOT / resource).is_file(), resource)
         for path in [ROOT / "SKILL.md", *sorted((ROOT / "runtime").glob("*.md"))]:
             body = path.read_text(encoding="utf-8")
             self.assertNotIn("/Users/", body)
@@ -79,19 +87,59 @@ class PackageTests(unittest.TestCase):
 
     def test_constraint_and_verification_entry_points(self):
         spec = (ROOT / "docs" / "design-spec.md").read_text(encoding="utf-8")
-        for name in ("C1", "C2", "C3", "C4", "C5", "C6", "G1", "G2", "G3", "D1"):
-            self.assertRegex(spec, r"(?m)^#### " + name + r"\. ")
-        self.assertIn("### 3.5 收尾检查清单", spec)
+        # §3 保留设计原则和每条规则集的唯一原文链接；规则定义本身已移入模块。
+        stubs = {
+            "### 3.2 核心约束（6 条）": "modules/constraints-common.md",
+            "### 3.3 边界护栏（3 条）": "modules/constraints-writing.md",
+            "### 3.4 领域子规则": "modules/constraints-architecture.md",
+            "### 3.5 收尾检查清单（原始规格，运行时已合并）": "../runtime/verify-checks.md",
+        }
+        for heading, link in stubs.items():
+            with self.subTest(heading=heading):
+                self.assertIn(heading, spec)
+                self.assertIn(link, spec[spec.index(heading):])
+        self.assertNotRegex(spec, r"(?m)^#### [CGD]\d+\.")
+        modules = {
+            "docs/modules/constraints-common.md": ("C1", "C2", "C3", "C4", "C5", "C6", "G2"),
+            "docs/modules/constraints-writing.md": ("G1", "G3"),
+            "docs/modules/constraints-architecture.md": ("D1",),
+        }
+        for path, names in modules.items():
+            text = (ROOT / path).read_text(encoding="utf-8")
+            with self.subTest(path=path):
+                self.assertIn("## 关联入口", text)
+                # 规则集自己声明读取时机：正文首节之前必须写明完整读取。
+                self.assertIn("完整读取", text[:text.index("####")])
+            for name in names:
+                with self.subTest(path=path, name=name):
+                    self.assertRegex(text, r"(?m)^#### " + name + r"\. ")
         verify = (ROOT / "runtime" / "verify-checks.md").read_text(encoding="utf-8")
         for number in range(1, 12):
             self.assertRegex(verify, r"#" + str(number) + r"(?!\d)")
         for name in ("V1", "V2", "V3", "V4", "V5"):
             self.assertIn(name, verify)
-        self.assertIn("../docs/design-spec.md", verify)
+        self.assertIn("../docs/modules/constraints-common.md", verify)
         self.assertIn("../templates/_index.md", verify)
+        # 阶段入口必须直接指向单一规则源，不再靠合并页面转述。
+        for path in ("runtime/prepare.md", "runtime/research.md", "runtime/write-assist.md",
+                     "runtime/verify-checks.md"):
+            with self.subTest(stage=path):
+                text = (ROOT / path).read_text(encoding="utf-8")
+                self.assertIn("](../docs/modules/constraints-", text)
+        # 原 5.2、5.8 页面改为索引，按需模块各自持有原文。
+        indexes = {
+            "docs/modules/5.2-document-templates.md": ("5.2-type-overview.md", "5.2-examples.md"),
+            "docs/modules/5.8-structured-expression.md": ("5.8-mermaid.md", "5.8-tables.md",
+                                                          "5.8-code-blocks.md"),
+        }
+        for path, links in indexes.items():
+            text = (ROOT / path).read_text(encoding="utf-8")
+            for link in links:
+                with self.subTest(index=path, link=link):
+                    self.assertIn("](" + link + ")", text)
 
     def test_local_markdown_links_resolve_inside_package(self):
-        paths = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
+        paths = [ROOT / "README.md", ROOT / "README.zh-CN.md", ROOT / "CONTRIBUTING.md"]
         for directory in ("runtime", "templates", "docs", "examples"):
             paths.extend((ROOT / directory).rglob("*.md"))
         for path in paths:

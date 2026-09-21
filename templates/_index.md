@@ -1,7 +1,7 @@
 # 文档类型模板索引
 
-> L1 层模板文件。Phase 1（准备阶段）根据文档类型加载对应模板。
-> 模板规范见 `docs/modules/5.2-document-templates.md` §5.2.8。
+> L1 层模板文件。准备阶段确定类型后完整读取对应模板，包含变体、条件、类型验证与适用分支，不裁成阶段片段。
+> 选型及固定/定制边界见[准备入口](../runtime/prepare.md)；维护模板时见[模板规范](../docs/modules/5.2-document-templates.md) §5.2.8。
 
 ## 工程生命周期文档
 
@@ -14,6 +14,8 @@
 | 测试报告 | [test-report.md](test-report.md) | CI 报告 | 3 |
 | 部署/Runbook | [deploy-runbook.md](deploy-runbook.md) | Deploy Guide | 4 |
 | ADR | [adr.md](adr.md) | Nygard | 5 |
+
+技术设计在同一类型内选架构方案／程序详细设计任务分支，再选原有变体；分支入口见该模板，不增加类型。
 
 ## 知识传递文档（Diátaxis）
 
@@ -28,7 +30,4 @@
 
 ## 扩展
 
-新增文档类型时：
-1. 在此目录创建 `{type}.md`，遵循 5.2.8 规范
-2. 在本文件添加索引行
-3. 如有类型专用子规则，编号为 D{N}（D1 为架构文档质量清单）
+新增文档类型按[模板指导](../docs/modules/5.2-document-templates.md) §5.2.10 执行。

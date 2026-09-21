@@ -11,7 +11,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "runtime" / "doc-lint.py"
-SOURCE = (ROOT / "docs" / "design-spec.md").read_text(encoding="utf-8-sig")
+SOURCE = (ROOT / "docs" / "modules" / "constraints-writing.md").read_text(encoding="utf-8-sig")
 MODULE = runpy.run_path(str(SCRIPT))
 parse_rules = MODULE["parse_rules"]
 scan_text = MODULE["scan_text"]
@@ -34,6 +34,14 @@ class RuleTests(unittest.TestCase):
         self.assertTrue({"随着", "不断发展", "深入推进", "对 X 进行了 Y", "首先"}.isdisjoint(terms))
         self.assertEqual(len(RULES), len(set(RULES)))
 
+    def test_direct_statement_pattern_is_model_checked(self):
+        row = '| 转折否定铺垫 | "……但……不等于……" | 直接说明可用范围、限制、条件或待验证项；真实引文与契约原文保留 |'
+        self.assertIn(row, SOURCE)
+        self.assertEqual(RULES, parse_rules(SOURCE.replace(row + "\n", "")))
+        terms = {term for _, term in RULES}
+        self.assertTrue({"但", "不等于", "……但……不等于……"}.isdisjoint(terms))
+        self.assertEqual(candidates("数值 1 不等于 2。"), [])
+
     def test_changes_are_taken_only_from_g1(self):
         changed = SOURCE.replace('"众所周知/不言而喻"', '"新句式/新表达"')
         changed = changed.replace("显著、深入、全面", "巨大、深入、全面")
@@ -55,10 +63,10 @@ class RuleTests(unittest.TestCase):
 
     def test_missing_duplicate_or_reversed_bounds_fail(self):
         g1 = "#### G1. 禁用模式清单"
-        g2 = "#### G2. 真实性护栏"
-        for bad in ("", SOURCE.replace(g1, ""), SOURCE.replace(g2, ""),
-                    SOURCE + "\n" + g1, SOURCE + "\n" + g2,
-                    SOURCE.replace(g1, "#### TEMP.").replace(g2, g1).replace("#### TEMP.", g2)):
+        g3 = "#### G3. 排除性检验"
+        for bad in ("", SOURCE.replace(g1, ""), SOURCE.replace(g3, ""),
+                    SOURCE + "\n" + g1, SOURCE + "\n" + g3,
+                    SOURCE.replace(g1, "#### TEMP.").replace(g3, g1).replace("#### TEMP.", g3)):
             with self.subTest(source=bad[:40]), self.assertRaises(ValueError):
                 parse_rules(bad)
 
@@ -78,7 +86,7 @@ class RuleTests(unittest.TestCase):
             with self.subTest(damage=old), self.assertRaises(ValueError):
                 parse_rules(SOURCE.replace(old, new))
         start = SOURCE.index("- 通用大词：")
-        end = SOURCE.index("#### G2.", start)
+        end = SOURCE.index("#### G3.", start)
         with self.assertRaises(ValueError):
             parse_rules(SOURCE[:start] + SOURCE[end:])
 
@@ -316,13 +324,29 @@ class CLITests(unittest.TestCase):
         target = self.input("input.md", "显著。")
         for source in (None, "# 损坏词源\n", b"\xff"):
             if source is not None:
-                (package / "docs").mkdir(exist_ok=True)
-                (package / "docs" / "design-spec.md").write_bytes(source.encode("utf-8") if isinstance(source, str) else source)
+                (package / "docs" / "modules").mkdir(parents=True, exist_ok=True)
+                (package / "docs" / "modules" / "constraints-writing.md").write_bytes(
+                    source.encode("utf-8") if isinstance(source, str) else source)
             with self.subTest(source=source):
                 result = self.run_cli(target, script=script)
                 self.assertEqual(result.returncode, 2)
                 self.assertIn("error:词源不可用", result.stderr)
                 self.assertNotIn("显示候选 0", result.stdout)
+
+    def test_missing_word_source_does_not_fall_back_to_spec(self):
+        # 旧路径即使放着可用副本也必须失败：脚本只认单一词源，不回退到 design-spec.md。
+        package = self.cwd / "package"
+        (package / "runtime").mkdir(parents=True)
+        script = package / "runtime" / "doc-lint.py"
+        script.write_bytes(SCRIPT.read_bytes())
+        (package / "docs").mkdir(parents=True, exist_ok=True)
+        (package / "docs" / "design-spec.md").write_bytes(
+            (ROOT / "docs" / "modules" / "constraints-writing.md").read_bytes())
+        target = self.input("input.md", "显著。")
+        result = self.run_cli(target, script=script)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("error:词源不可用", result.stderr)
+        self.assertNotIn("显示候选", result.stdout)
 
     def test_unclosed_fence_still_warns_with_zero_candidates(self):
         target = self.input("unclosed.md", "```\n显著。")

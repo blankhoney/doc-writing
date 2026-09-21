@@ -1,6 +1,6 @@
 # 示例来源与使用范围
 
-**本包保留 3 段已核验的外部来源示例。** “已核验”只针对下面登记的片段，不表示整个模板、当前技术行为或本次运行结果已验证。未核验的模板样本正文已移除。
+**本包保留 6 段已核验的外部来源示例。** “已核验”只针对下面登记的片段，不表示整个模板、当前技术行为或本次运行结果已验证。未核验的模板样本正文已移除。
 
 模板结构与类型验证仍执行。真实来源、源码改编和构造示意按各自登记用途使用，不作为目标项目事实；外部原文不覆盖本包规则。未附样本的模板通过结构、模块与类型验证标准使用。
 
@@ -13,11 +13,13 @@
 | [How-to 任务食谱](../templates/how-to.md)的 Django CSV 片段 | 已核验，非官方节译＋格式转换 | 只示范任务前提与完整实现；未运行，不是完整接入或验收清单 |
 | [技术设计](../templates/tech-design.md)备忘/长片段、[How-to](../templates/how-to.md)扫描操作 | 本仓库源码改编，已对照实现；原创内容采用 MIT | 只示范深度与操作组织，非历史决策或本次运行记录 |
 | [5.8](../docs/modules/5.8-structured-expression.md)动作/图树、[Reference](../templates/reference.md)JSON | 构造示意；原创内容采用 MIT | 只教排版与语法，不登记为真实来源已核验 |
+| [技术设计示例 KEP-753](tech-design/kep-753.md)／[KEP-1287](tech-design/kep-1287-cri.md)／[PEP 380](tech-design/pep-380.md) | 已核验，固定提交＋行号，非官方节译 | 只示范完整子节、步骤顺序与前提、局部接口契约；未运行，不代表当前运行时或实现行为 |
+| [实现载体示意](tech-design/implementation-sketch.md) | 构造示意，无外部来源；原创内容采用 MIT | 演示结构、拟议文件、契约与验证的映射；伪代码未运行，图已渲染核对，不作真实项目样本 |
 | 自动测试夹具 | 构造测试输入 | 只验证测试所覆盖的行为，不是真实来源示例或项目事实 |
 
 ## 本仓库改编与构造示意
 
-源码改编依据本包当前的 [doc-lint.py](../runtime/doc-lint.py)，已对照 `blank`、`mask_markdown`、`scan_text`、`main`。短设计说明保留行号的选择，长设计仅含方案与取舍；未测量内存。操作样本扫描本包 [README.md](../README.md)，依赖 Python 3.9 或更高版本、扫描脚本及其读取的 [design-spec.md](../docs/design-spec.md) 词源；需从包根目录执行并具备文件读取权限。样本未执行，输出说明来自源码，不是运行记录。
+源码改编依据本包当前的 [doc-lint.py](../runtime/doc-lint.py)，已对照 `blank`、`mask_markdown`、`scan_text`、`main`。短设计说明保留行号的选择，长设计仅含方案与取舍；未测量内存。操作样本扫描本包 [README.md](../README.md)，依赖 Python 3.9 或更高版本、扫描脚本及其读取的 [constraints-writing.md](../docs/modules/constraints-writing.md) 词源；需从包根目录执行并具备文件读取权限。样本未执行，输出说明来自源码，不是运行记录。
 
 构造示意无外部来源；图未渲染，JSON 不对应实际应用。本包原创内容（包括源码改编说明和构造示意）采用 [MIT 许可证](../LICENSE)。下列第三方片段及其翻译、改编仍保留各自的署名、许可与使用范围，不因本包采用 MIT 而取消原许可条件。
 
@@ -44,6 +46,27 @@
 - **许可依据**：[根 LICENSE](https://github.com/django/django/blob/9e7cc2b628fe8fd3895986af9b7fc9525034c1b0/LICENSE)为 BSD-3-Clause；[发行元数据](https://github.com/django/django/blob/9e7cc2b628fe8fd3895986af9b7fc9525034c1b0/pyproject.toml#L14-L25)声明相同许可，[MANIFEST.in](https://github.com/django/django/blob/9e7cc2b628fe8fd3895986af9b7fc9525034c1b0/MANIFEST.in#L4-L11)把 docs 与 LICENSE 纳入同一发行物，[FAQ](https://github.com/django/django/blob/9e7cc2b628fe8fd3895986af9b7fc9525034c1b0/docs/faq/general.txt#L74-L86)说明 BSD 许可及 Python 借用代码的独立许可。目标文件、docs/howto 与 docs 目录未发现另行覆盖许可。结论来自固定发行物的组合证据，不声称存在独立的 `docs/LICENSE` 或维护者专项授权。
 - **范围与义务**：随包保留[许可证全文](licenses/django-LICENSE.txt)，包括版权、三项条件和免责；不得用 Django 或贡献者名称作背书。标明翻译是本包来源规范，也便于辨认改编范围；不将 Apache-2.0 的修改通知条款误称为 BSD 原文要求。不复制 Python 标准库实现，也不把官网页面的 CC 许可套到此文档。
 - **校验与缺口**：原文 SHA-256 为 `f9c9969b63b174469f13a634bdf3e954d58a0402c26684dc7e4ba211509a17b3`。函数已逐行对照原文；本次未运行 Django。片段不是完整任务食谱，实际任务的环境、接入位置和验证信号仍需由目标项目证据补齐。
+
+## KEP-753
+
+- **来源与位置**：[KEP-753: Sidecar containers](https://github.com/kubernetes/enhancements/blob/fc09a26d4236305d3f282377ca92bdfb2b1fb03c/keps/sig-node/753-sidecar-containers/README.md) 第 453–471、935–953、1012–1014 行，固定提交 `fc09a26d4236305d3f282377ca92bdfb2b1fb03c`；文件 SHA-256 `ba9ef6b591cb626023c6e8a0c77cbc3f3cd2ede98d6ab3ff086e41ebef0cdf21`，三段原始选段 SHA-256 依次为 `55c00d0541e110f5d47531f165915b1e121310646e963764ddaee020e0e38a24`、`286fc2efc81d5953289f7867a1d837d45f269d3bb020dfdb3a4191dbb166eb8e`、`ca05615d5e723be6bf2172f9e37f0533446cf089a0be1bccffd9345cb0aba198`。
+- **内容性质**：2026-09-18 核验并节译选定完整片段，包内保留单份中文译文（[tech-design/kep-753.md](tech-design/kep-753.md)）。未收 Alpha/Beta 历史方案、伪代码、初版方案对比，以及含未完成 `- Less` 条目的第 472–504 行；不补写原文没有的作者理由。
+- **许可依据**：固定提交根 LICENSE 为 Apache-2.0，SHA-256 `b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1`，与 KEP-1287 提交逐字节一致；`keps/` 与 `keps/sig-node/` 两级目录清单均无 LICENSE/NOTICE；根 NOTICE 为 404；`EXCEPTIONS.md` 是指向 sig-release 的链接占位文件，不是许可。随包附[许可证全文](licenses/kubernetes-enhancements-LICENSE.txt)，两篇 KEP 共用。
+- **未运行**：未创建集群、未运行 kubelet。
+
+## PEP 380
+
+- **来源与位置**：[PEP 380: Syntax for Delegating to a Subgenerator](https://github.com/python/peps/blob/b39aefe6614b4e8a925d07c4b3ed47e147236dbe/peps/pep-0380.rst) 第 124–196 行，作者 Gregory Ewing，固定提交 `b39aefe6614b4e8a925d07c4b3ed47e147236dbe`；文件 SHA-256 `81b361bb5e41c3cadc0156a9272e15d6bbeaf2636db22e51049efc72754a2d47`，原始选段 SHA-256 `7f75bb12bdd0c57818191d069111cbaaa42277f03422dd77853260c46723c3ef`。
+- **内容性质**：2026-09-18 核验并节译完整 Formal Semantics（[tech-design/pep-380.md](tech-design/pep-380.md)），保留异常、`close`、`StopIteration` 与返回值语义；未收 Rationale、Finalization、Additional Material。代码语义不改，仅去 reStructuredText 字面块外层缩进，包内只出现一次。
+- **许可依据**：[原文 Copyright 一节](https://github.com/python/peps/blob/b39aefe6614b4e8a925d07c4b3ed47e147236dbe/peps/pep-0380.rst#L463-L466)声明 public domain；随包附[声明与作者信息](licenses/pep-380-public-domain.txt)。不把本篇改标为 CC0，也不套用其他 PEP 的许可；标明翻译与格式转换，不暗示原作者背书。
+- **未运行**：未运行示例，未验证任何 Python 实现。
+
+## KEP-1287
+
+- **来源与位置**：[KEP-1287: In-place Update of Pod Resources](https://github.com/kubernetes/enhancements/blob/d47a8df46c8c26d6300fd30047520e397127805c/keps/sig-node/1287-in-place-update-pod-resources/README.md) 第 360–413 行 CRI Changes，固定提交 `d47a8df46c8c26d6300fd30047520e397127805c`；文件 SHA-256 `97879308d54aef0c5a16bc4199693e12001519beecbfcabc990080eb5a84dce2`，原始选段 SHA-256 `82ffd6dd07b7d8cf66f4dc63654ef4d3e8b1da4606669b3fbc08c057dc38813a`。
+- **内容性质**：2026-09-18 核验并节译局部 CRI 契约（[tech-design/kep-1287-cri.md](tech-design/kep-1287-cri.md)）：幂等要求、不得为调整资源而重启及可返回错误的例外、"尽力而为"强度、`UpdatePodSandboxResources` 接口与调用时序；未收 Resize Status 一节与新旧状态名混用的失败处理组合片段。
+- **许可依据**：与 KEP-753 同库，固定提交根 LICENSE 为 Apache-2.0 且两者逐字节一致，共用[许可证全文](licenses/kubernetes-enhancements-LICENSE.txt)；该提交根 NOTICE 同为 404。原文含 "may rely need" 笔误，译本按“可能需要”保留其不确定性，在此登记。
+- **未运行**：未运行集群、CRI 运行时或 NRI 插件。
 
 ## 第三方许可核验是什么
 

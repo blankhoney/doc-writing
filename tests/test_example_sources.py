@@ -17,6 +17,8 @@ class ExampleSourceTests(unittest.TestCase):
             "requests-LICENSE.txt": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b",
             "requests-NOTICE.txt": "f5110972dedad2b4e9d314518daf3b7d72d6e02e499acd802181de6f74571dcc",
             "django-LICENSE.txt": "b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669",
+            "kubernetes-enhancements-LICENSE.txt": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+            "pep-380-public-domain.txt": "f1404063dddc2060d0ea89611bf06d1f87e112324479e46a8d86010301e43273",
         }
         for name, digest in expected.items():
             with self.subTest(file=name):
@@ -72,8 +74,8 @@ class ExampleSourceTests(unittest.TestCase):
 
     def test_registry_describes_public_license_and_local_adaptations(self):
         registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
-        for link in ("../LICENSE", "../runtime/doc-lint.py", "../docs/design-spec.md",
-                     "../README.md"):
+        for link in ("../LICENSE", "../runtime/doc-lint.py",
+                     "../docs/modules/constraints-writing.md", "../README.md"):
             self.assertIn("](" + link + ")", registry)
             self.assertTrue((ROOT / "examples" / link).is_file())
         self.assertIn("MIT", registry)
@@ -87,6 +89,55 @@ class ExampleSourceTests(unittest.TestCase):
             text = (ROOT / "templates" / (name + ".md")).read_text(encoding="utf-8")
             self.assertIn("本包当前源码", text)
             self.assertNotIn("89bb448", text)
+
+    def test_kubernetes_license_is_apache_2_0_and_shared_by_both_commits(self):
+        text = (ROOT / "examples" / "licenses" /
+                "kubernetes-enhancements-LICENSE.txt").read_text(encoding="utf-8")
+        self.assertIn("Apache License", text)
+        self.assertIn("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION", text)
+        registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
+        self.assertIn("与 KEP-1287 提交逐字节一致", registry)
+        self.assertIn("b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1", registry)
+
+    def test_pep_380_public_domain_copy_keeps_authorship_and_statement(self):
+        text = (ROOT / "examples" / "licenses" /
+                "pep-380-public-domain.txt").read_text(encoding="utf-8")
+        self.assertIn("PEP: 380", text)
+        self.assertIn("Gregory Ewing", text)
+        self.assertIn("This document has been placed in the public domain.", text)
+        self.assertNotIn("CC0", text)
+
+    def test_new_samples_register_fixed_selections_and_keep_license_copies(self):
+        registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
+        anchors = {
+            "kep-753.md": ("fc09a26d4236305d3f282377ca92bdfb2b1fb03c",
+                           "keps/sig-node/753-sidecar-containers/README.md", "#kep-753"),
+            "pep-380.md": ("b39aefe6614b4e8a925d07c4b3ed47e147236dbe",
+                           "peps/pep-0380.rst", "#pep-380"),
+            "kep-1287-cri.md": ("d47a8df46c8c26d6300fd30047520e397127805c",
+                                "keps/sig-node/1287-in-place-update-pod-resources/README.md",
+                                "#kep-1287"),
+        }
+        for name, (commit, path, anchor) in anchors.items():
+            with self.subTest(example=name):
+                text = (ROOT / "examples" / "tech-design" / name).read_text(encoding="utf-8")
+                self.assertIn("/blob/" + commit + "/" + path, text)
+                self.assertIn("/blob/" + commit + "/" + path, registry)
+                self.assertIn("../SOURCES.md" + anchor, text)
+                self.assertIn("../licenses/", text)
+                self.assertIn("未运行", text)
+        for heading in ("## KEP-753", "## PEP 380", "## KEP-1287"):
+            self.assertIn(heading, registry)
+
+    def test_branch_templates_keep_registered_samples_only(self):
+        # 设计分支只链接已登记样本，不内联未核验正文。
+        for path in sorted((ROOT / "templates" / "tech-design").glob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(template=path.name):
+                self.assertNotRegex(text, r"示例来源待核验|未核验草稿|其余草稿")
+                self.assertNotRegex(text, r"(?m)^`{3,}markdown$")
+                for link in re.findall(r"\]\((\.\./\.\./examples/[^)\s#]+)", text):
+                    self.assertTrue((path.parent / link).is_file(), link)
 
     def test_django_code_is_unmodified_except_document_indentation(self):
         text = (ROOT / "templates" / "how-to.md").read_text(encoding="utf-8")

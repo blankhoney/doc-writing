@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Read-only, Python >= 3.9 candidate scanner; not a full Markdown parser.
 
-Only G1's literal alternatives and word lists are read from design-spec.md.
+Only G1's literal alternatives and word lists are read from the writing-rules
+module (docs/modules/constraints-writing.md).
 Templates are not converted to regexes, and semantic exceptions are not judged.
 Metadata must start on physical line 1. Fences use the same character and a
 closing run at least as long as the opener. Backtick spans may cross lines;
@@ -15,7 +16,7 @@ from pathlib import Path
 import re
 import sys
 
-RULES_PATH = Path(__file__).resolve().parent.parent / "docs" / "design-spec.md"
+RULES_PATH = Path(__file__).resolve().parent.parent / "docs" / "modules" / "constraints-writing.md"
 FORMATS = ("punctuation", "spacing", "parentheses")
 HAN = r"[㐀-䶿一-鿿豈-﫿]"
 FORMAT_PATTERNS = {
@@ -31,11 +32,11 @@ SCOPE = ("仅检查 G1 字面候选和所选格式；复杂模板不展开，不
 
 
 def parse_rules(text):
-    """Return (category, literal) pairs from the unique G1..G2 source, or fail."""
+    """Return (category, literal) pairs from the unique G1..G3 source, or fail."""
     bounds = [list(re.finditer(r"^####[ \t]+" + name + r"\.[^\n]*$", text, re.M))
-              for name in ("G1", "G2")]
+              for name in ("G1", "G3")]
     if any(len(matches) != 1 for matches in bounds) or bounds[0][0].start() >= bounds[1][0].start():
-        raise ValueError("词源必须有唯一且有序的 G1、G2 标题")
+        raise ValueError("词源必须有唯一且有序的 G1、G3 标题")
     block = text[bounds[0][0].end():bounds[1][0].start()]
     anchors = []
     for heading in ("禁用句式", "禁用修饰词", "禁用抽象大词"):
