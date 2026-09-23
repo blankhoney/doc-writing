@@ -143,7 +143,15 @@ class PackageTests(unittest.TestCase):
         for directory in ("runtime", "templates", "docs", "examples"):
             paths.extend((ROOT / directory).rglob("*.md"))
         for path in paths:
-            for line in outside_fences(path.read_text(encoding="utf-8")):
+            body = path.read_text(encoding="utf-8")
+            for term in {
+                "write-assist": ("删重复，不删事实、原因、依据和限制", "程序详细设计（含无代码示例）", "删无新增信息的自辩"),
+                "verify-checks": ("详细设计检查重点注释的交接",),
+                "implementation": ("| 代码规范 |", "重点注释已交接且可核验"),
+                "code-conventions": ("## 主动注释", "主动补足上述适用重点注释"),
+            }.get(path.stem, ()):
+                self.assertIn(term, body)
+            for line in outside_fences(body):
                 for link in re.findall(r"\]\(([^\s)]+)\)", line):
                     parts = urlsplit(link)
                     if parts.scheme or parts.netloc or not parts.path:
