@@ -2,16 +2,18 @@
 
 import ast
 import os
-from pathlib import Path
 import runpy
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "runtime" / "doc-lint.py"
-SOURCE = (ROOT / "docs" / "modules" / "constraints-writing.md").read_text(encoding="utf-8-sig")
+SOURCE = (ROOT / "docs" / "modules" / "constraints-writing.md").read_text(
+    encoding="utf-8-sig"
+)
 MODULE = runpy.run_path(str(SCRIPT))
 parse_rules = MODULE["parse_rules"]
 scan_text = MODULE["scan_text"]
@@ -30,8 +32,12 @@ def candidates(text, skip=()):
 class RuleTests(unittest.TestCase):
     def test_current_source_and_template_exclusion(self):
         terms = {term for _, term in RULES}
-        self.assertTrue({"众所周知", "不言而喻", "显著", "赋能", "解耦", "平台化"} <= terms)
-        self.assertTrue({"随着", "不断发展", "深入推进", "对 X 进行了 Y", "首先"}.isdisjoint(terms))
+        self.assertTrue(
+            {"众所周知", "不言而喻", "显著", "赋能", "解耦", "平台化"} <= terms
+        )
+        self.assertTrue(
+            {"随着", "不断发展", "深入推进", "对 X 进行了 Y", "首先"}.isdisjoint(terms)
+        )
         self.assertEqual(len(RULES), len(set(RULES)))
 
     def test_direct_statement_pattern_is_model_checked(self):
@@ -64,9 +70,14 @@ class RuleTests(unittest.TestCase):
     def test_missing_duplicate_or_reversed_bounds_fail(self):
         g1 = "#### G1. 禁用模式清单"
         g3 = "#### G3. 排除性检验"
-        for bad in ("", SOURCE.replace(g1, ""), SOURCE.replace(g3, ""),
-                    SOURCE + "\n" + g1, SOURCE + "\n" + g3,
-                    SOURCE.replace(g1, "#### TEMP.").replace(g3, g1).replace("#### TEMP.", g3)):
+        for bad in (
+            "",
+            SOURCE.replace(g1, ""),
+            SOURCE.replace(g3, ""),
+            SOURCE + "\n" + g1,
+            SOURCE + "\n" + g3,
+            SOURCE.replace(g1, "#### TEMP.").replace(g3, g1).replace("#### TEMP.", g3),
+        ):
             with self.subTest(source=bad[:40]), self.assertRaises(ValueError):
                 parse_rules(bad)
 
@@ -94,7 +105,9 @@ class RuleTests(unittest.TestCase):
         start = SOURCE.index("| 万能开场 |")
         end = SOURCE.index("**禁用修饰词**", start)
         with self.assertRaises(ValueError):
-            parse_rules(SOURCE[:start] + '| 模板 | "对 X 进行了 Y" | 删除 |\n\n' + SOURCE[end:])
+            parse_rules(
+                SOURCE[:start] + '| 模板 | "对 X 进行了 Y" | 删除 |\n\n' + SOURCE[end:]
+            )
 
     def test_python_39_syntax(self):
         ast.parse(SCRIPT.read_text(encoding="utf-8"), feature_version=(3, 9))
@@ -102,19 +115,27 @@ class RuleTests(unittest.TestCase):
 
 class ScanTests(unittest.TestCase):
     def test_candidates_and_normal_prose(self):
-        self.assertEqual({hit[2] for hit in candidates("众所周知，显著赋能。")}, {"众所周知", "显著", "赋能"})
-        self.assertEqual(scan("接口每天处理 100 条请求。选择缓存方案，因为数据库耗时 30 ms。"), ([], 0))
+        self.assertEqual(
+            {hit[2] for hit in candidates("众所周知，显著赋能。")},
+            {"众所周知", "显著", "赋能"},
+        )
+        self.assertEqual(
+            scan("接口每天处理 100 条请求。选择缓存方案，因为数据库耗时 30 ms。"),
+            ([], 0),
+        )
         self.assertEqual(len(candidates("显著降低 30%，赋能指代此处定义的操作。")), 2)
 
     def test_repeated_literal_occurrences_and_quotes(self):
         self.assertEqual(len(candidates("显著、显著。")), 2)
-        self.assertEqual([hit[0] for hit in candidates('> 显著。\n“显著”不是自动豁免。')], [1, 2])
+        self.assertEqual(
+            [hit[0] for hit in candidates("> 显著。\n“显著”不是自动豁免。")], [1, 2]
+        )
 
     def test_metadata_bom_and_physical_lines(self):
-        text = '﻿---\r\ntitle: 显著API\r\n---\r\n显著。\r\n'
+        text = "﻿---\r\ntitle: 显著API\r\n---\r\n显著。\r\n"
         self.assertEqual(candidates(text), [(4, "候选/修饰词", "显著")])
         self.assertEqual(candidates('+++\nx = "显著"\n+++\n显著。')[0][0], 4)
-        self.assertEqual(candidates('---\ntitle: 显著\n...\n显著。')[0][0], 4)
+        self.assertEqual(candidates("---\ntitle: 显著\n...\n显著。")[0][0], 4)
         self.assertEqual(candidates("正文。\n---\n显著。\n---")[0][0], 3)
 
     def test_backtick_and_tilde_fence_lengths(self):
@@ -127,18 +148,25 @@ class ScanTests(unittest.TestCase):
         self.assertEqual(candidates(text)[0][0], 6)
 
     def test_blockquote_code_is_excluded_but_not_quote_prose(self):
-        text = "> ```\n> 显著。\n> ```\n> 显著。\n> > ~~~\n> > 显著。\n> > ~~~\n> > 显著。"
+        text = (
+            "> ```\n> 显著。\n> ```\n> 显著。\n> > ~~~\n> > 显著。\n> > ~~~\n> > 显著。"
+        )
         self.assertEqual([hit[0] for hit in candidates(text)], [4, 8])
 
     def test_inline_code_and_urls(self):
-        text = '`显著API(中文):` ``显著 ` API中文``\nhttps://example.test/显著\n<https://example.test/赋能>\nmailto:显著@example.test'
+        text = "`显著API(中文):` ``显著 ` API中文``\nhttps://example.test/显著\n<https://example.test/赋能>\nmailto:显著@example.test"
         self.assertEqual(scan(text), ([], 0))
         self.assertEqual(candidates("`code`显著。"), [(1, "候选/修饰词", "显著")])
 
     def test_link_labels_survive_destination_masking(self):
         text = '[显著](https://example.test/赋能)赋能。\n[显著](../显著.md "赋能")\n![显著](图片/赋能.png)\n[显著](https://example.test/a_(赋能))'
-        self.assertEqual([hit[2] for hit in candidates(text)], ["显著", "赋能", "显著", "显著", "显著"])
-        self.assertEqual(len(candidates("[显著][赋能]\n[赋能]: https://example.test/显著")), 1)
+        self.assertEqual(
+            [hit[2] for hit in candidates(text)],
+            ["显著", "赋能", "显著", "显著", "显著"],
+        )
+        self.assertEqual(
+            len(candidates("[显著][赋能]\n[赋能]: https://example.test/显著")), 1
+        )
 
     def test_unclosed_regions_warn_instead_of_claiming_success(self):
         for text in ("```\n显著。", "~~~\n显著。", "---\n显著。", "+++\n显著。"):
@@ -153,20 +181,30 @@ class ScanTests(unittest.TestCase):
     def test_complex_exclusion_limits_warn(self):
         for text in ("[显著](a(b(c)))", "https://example.test/a(显著)", "<!-- 未闭合"):
             with self.subTest(text=text):
-                self.assertTrue(any(category == "范围" for _, category, _ in scan(text)[0]))
+                self.assertTrue(
+                    any(category == "范围" for _, category, _ in scan(text)[0])
+                )
         self.assertEqual(scan("")[0][0][1], "范围")
 
     def test_format_categories_and_skips(self):
-        examples = {"punctuation": "**说明**: 正文。", "spacing": "中文API接口", "parentheses": "方案(需要审批)"}
+        examples = {
+            "punctuation": "**说明**: 正文。",
+            "spacing": "中文API接口",
+            "parentheses": "方案(需要审批)",
+        }
         for name, text in examples.items():
             with self.subTest(name=name):
                 hits = candidates(text)
                 self.assertTrue(hits)
-                self.assertEqual({category for _, category, _ in hits}, {"候选/" + name})
+                self.assertEqual(
+                    {category for _, category, _ in hits}, {"候选/" + name}
+                )
                 self.assertEqual(candidates(text, (name, name)), [])
         self.assertEqual(candidates("说明：中文 API 接口（需要审批）。"), [])
         self.assertEqual(candidates("API (English only)."), [])
-        self.assertEqual(candidates("显著API:方案(中文)", FORMATS), [(1, "候选/修饰词", "显著")])
+        self.assertEqual(
+            candidates("显著API:方案(中文)", FORMATS), [(1, "候选/修饰词", "显著")]
+        )
         self.assertEqual([hit[2] for hit in candidates("中A文")], ["中A", "A文"])
 
     def test_reported_context_is_original_text(self):
@@ -180,7 +218,10 @@ class SuppressionTests(unittest.TestCase):
     def test_only_next_physical_line_and_application_record(self):
         records, count = scan(self.directive + "\r\n显著API\r\n显著。\r\n")
         self.assertEqual(count, 2)
-        self.assertEqual([row for row in records if row[1].startswith("候选/")], [(3, "候选/修饰词", "显著")])
+        self.assertEqual(
+            [row for row in records if row[1].startswith("候选/")],
+            [(3, "候选/修饰词", "显著")],
+        )
         application = [row for row in records if row[1] == "抑制应用"]
         self.assertEqual(application[0][0], 2)
         self.assertIn("引用原文", application[0][2])
@@ -193,8 +234,12 @@ class SuppressionTests(unittest.TestCase):
         self.assertTrue(any(row[0] == 2 and row[1] == "抑制应用" for row in records))
 
     def test_reason_is_required_and_other_commands_are_inert(self):
-        for bad in ("<!-- doc-lint: ignore-next-line -->", "<!-- doc-lint: ignore-next-line   -->",
-                    "<!-- doc-lint: ignore-file 原因 -->", "<!-- doc-lint: ignore-next-line原因 -->"):
+        for bad in (
+            "<!-- doc-lint: ignore-next-line -->",
+            "<!-- doc-lint: ignore-next-line   -->",
+            "<!-- doc-lint: ignore-file 原因 -->",
+            "<!-- doc-lint: ignore-next-line原因 -->",
+        ):
             with self.subTest(directive=bad):
                 records, count = scan(bad + "\n显著。")
                 self.assertEqual(count, 0)
@@ -202,15 +247,22 @@ class SuppressionTests(unittest.TestCase):
                 self.assertTrue(any(category == "范围" for _, category, _ in records))
 
     def test_directives_in_code_or_metadata_are_inert(self):
-        texts = [f"`{self.directive}`\n显著。", f"``{self.directive}``\n显著。",
-                 f"```\n{self.directive}\n```\n显著。", f"~~~\n{self.directive}\n~~~\n显著。",
-                 f"---\n{self.directive}\n---\n显著。", f"`跨行\n{self.directive}\n`\n显著。"]
+        texts = [
+            f"`{self.directive}`\n显著。",
+            f"``{self.directive}``\n显著。",
+            f"```\n{self.directive}\n```\n显著。",
+            f"~~~\n{self.directive}\n~~~\n显著。",
+            f"---\n{self.directive}\n---\n显著。",
+            f"`跨行\n{self.directive}\n`\n显著。",
+        ]
         for text in texts:
             with self.subTest(text=text):
                 records, count = scan(text)
                 self.assertEqual(count, 0)
                 self.assertEqual(len(candidates(text)), 1)
-                self.assertFalse(any(category == "抑制应用" for _, category, _ in records))
+                self.assertFalse(
+                    any(category == "抑制应用" for _, category, _ in records)
+                )
 
     def test_escaped_backslashes_before_inline_code(self):
         for length in (2, 4):
@@ -219,17 +271,25 @@ class SuppressionTests(unittest.TestCase):
                 records, count = scan(text)
                 self.assertEqual(count, 0)
                 self.assertEqual(candidates(text), [(2, "候选/修饰词", "显著")])
-                self.assertFalse(any(category == "抑制应用" for _, category, _ in records))
+                self.assertFalse(
+                    any(category == "抑制应用" for _, category, _ in records)
+                )
 
     def test_container_fences_are_conservative_and_inert(self):
-        for opening, closing in (("- ~~~~", "  ~~~~"), ("1. ```", "   ```"), ("    ```", "    ```")):
+        for opening, closing in (
+            ("- ~~~~", "  ~~~~"),
+            ("1. ```", "   ```"),
+            ("    ```", "    ```"),
+        ):
             text = f"{opening}\n  {self.directive}\n  显著。\n{closing}\n显著。"
             with self.subTest(opening=opening):
                 records, count = scan(text)
                 self.assertEqual(count, 0)
                 self.assertEqual(candidates(text), [(5, "候选/修饰词", "显著")])
                 self.assertTrue(any(category == "范围" for _, category, _ in records))
-                self.assertFalse(any(category == "抑制应用" for _, category, _ in records))
+                self.assertFalse(
+                    any(category == "抑制应用" for _, category, _ in records)
+                )
 
     def test_eof_is_not_an_extra_line_or_cross_file_state(self):
         for ending in ("", "\n", "\r\n"):
@@ -260,9 +320,16 @@ class CLITests(unittest.TestCase):
         self.cwd = Path(self.directory.name)
 
     def run_cli(self, *args, script=SCRIPT):
-        return subprocess.run([sys.executable, str(script), *map(str, args)], cwd=self.cwd,
-                              capture_output=True, text=True, encoding="utf-8", timeout=20,
-                              env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+        return subprocess.run(
+            [sys.executable, str(script), *map(str, args)],
+            cwd=self.cwd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=20,
+            check=False,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
 
     def input(self, name, data):
         path = self.cwd / name
@@ -270,7 +337,7 @@ class CLITests(unittest.TestCase):
         return path
 
     def test_foreign_cwd_spaces_crlf_read_only_and_warning_exit_zero(self):
-        data = '﻿---\r\ntitle: 显著\r\n---\r\n显著API\r\n`显著`\r\n'.encode("utf-8")
+        data = "﻿---\r\ntitle: 显著\r\n---\r\n显著API\r\n`显著`\r\n".encode()
         path = self.input("带 空格.md", data)
         result = self.run_cli(path.name)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -326,7 +393,8 @@ class CLITests(unittest.TestCase):
             if source is not None:
                 (package / "docs" / "modules").mkdir(parents=True, exist_ok=True)
                 (package / "docs" / "modules" / "constraints-writing.md").write_bytes(
-                    source.encode("utf-8") if isinstance(source, str) else source)
+                    source.encode("utf-8") if isinstance(source, str) else source
+                )
             with self.subTest(source=source):
                 result = self.run_cli(target, script=script)
                 self.assertEqual(result.returncode, 2)
@@ -341,7 +409,8 @@ class CLITests(unittest.TestCase):
         script.write_bytes(SCRIPT.read_bytes())
         (package / "docs").mkdir(parents=True, exist_ok=True)
         (package / "docs" / "design-spec.md").write_bytes(
-            (ROOT / "docs" / "modules" / "constraints-writing.md").read_bytes())
+            (ROOT / "docs" / "modules" / "constraints-writing.md").read_bytes()
+        )
         target = self.input("input.md", "显著。")
         result = self.run_cli(target, script=script)
         self.assertEqual(result.returncode, 2)

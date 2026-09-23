@@ -2,9 +2,9 @@
 
 import ast
 import hashlib
-from pathlib import Path
 import re
 import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -28,9 +28,21 @@ class ExampleSourceTests(unittest.TestCase):
     def test_verified_samples_keep_fixed_sources_and_partial_scope(self):
         registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
         samples = {
-            "changelog": ("147c8511ddbfa5e8f71bbf5c18ede0c4ceb3bba4", "requests-2310", "历史更新说明"),
-            "adr": ("1134d4b38c40583cdcd00637a7c29de02351f9d8", "backstage-adr003", "不是完整 Nygard ADR"),
-            "how-to": ("9e7cc2b628fe8fd3895986af9b7fc9525034c1b0", "django-csv", "未安装或运行 Django"),
+            "changelog": (
+                "147c8511ddbfa5e8f71bbf5c18ede0c4ceb3bba4",
+                "requests-2310",
+                "历史更新说明",
+            ),
+            "adr": (
+                "1134d4b38c40583cdcd00637a7c29de02351f9d8",
+                "backstage-adr003",
+                "不是完整 Nygard ADR",
+            ),
+            "how-to": (
+                "9e7cc2b628fe8fd3895986af9b7fc9525034c1b0",
+                "django-csv",
+                "未安装或运行 Django",
+            ),
         }
         for name, (commit, anchor, limitation) in samples.items():
             with self.subTest(template=name):
@@ -49,18 +61,24 @@ class ExampleSourceTests(unittest.TestCase):
         expected = {
             "adr": ["### 示例（已核验局部：Backstage ADR003）"],
             "changelog": ["### 示例（已核验：Requests 2.31.0 Security 条目）"],
-            "how-to": ["### 示例（完整操作单元：扫描本仓库 README）",
-                       "### 示例（已核验局部：Django 5.2 CSV 输出）"],
+            "how-to": [
+                "### 示例（完整操作单元：扫描本仓库 README）",
+                "### 示例（已核验局部：Django 5.2 CSV 输出）",
+            ],
             "reference": ["构造示意：假想配置仅含下列两键"],
-            "tech-design": ["来源：[doc-lint.py]", "来源同上，按源码解释当前实现",
-                            "SDD 格式因合同/法规而异，不提供通用示例"],
+            "tech-design": [
+                "来源：[doc-lint.py]",
+                "来源同上，按源码解释当前实现",
+                "SDD 格式因合同/法规而异，不提供通用示例",
+            ],
         }
         for path in sorted((ROOT / "templates").glob("*.md")):
             if path.name == "_index.md":
                 continue
             text = path.read_text(encoding="utf-8")
             sections = re.findall(
-                r"(?m)^### 示例[^\n]*\n[\s\S]*?(?=^### 示例|^---\n|\Z)", text)
+                r"(?m)^### 示例[^\n]*\n[\s\S]*?(?=^### 示例|^---\n|\Z)", text
+            )
 
             markers = expected.get(path.stem, [])
             with self.subTest(template=path.stem):
@@ -74,8 +92,12 @@ class ExampleSourceTests(unittest.TestCase):
 
     def test_registry_describes_public_license_and_local_adaptations(self):
         registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
-        for link in ("../LICENSE", "../runtime/doc-lint.py",
-                     "../docs/modules/constraints-writing.md", "../README.md"):
+        for link in (
+            "../LICENSE",
+            "../runtime/doc-lint.py",
+            "../docs/modules/constraints-writing.md",
+            "../README.md",
+        ):
             self.assertIn("](" + link + ")", registry)
             self.assertTrue((ROOT / "examples" / link).is_file())
         self.assertIn("MIT", registry)
@@ -91,17 +113,23 @@ class ExampleSourceTests(unittest.TestCase):
             self.assertNotIn("89bb448", text)
 
     def test_kubernetes_license_is_apache_2_0_and_shared_by_both_commits(self):
-        text = (ROOT / "examples" / "licenses" /
-                "kubernetes-enhancements-LICENSE.txt").read_text(encoding="utf-8")
+        text = (
+            ROOT / "examples" / "licenses" / "kubernetes-enhancements-LICENSE.txt"
+        ).read_text(encoding="utf-8")
         self.assertIn("Apache License", text)
-        self.assertIn("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION", text)
+        self.assertIn(
+            "TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION", text
+        )
         registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
         self.assertIn("与 KEP-1287 提交逐字节一致", registry)
-        self.assertIn("b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1", registry)
+        self.assertIn(
+            "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1", registry
+        )
 
     def test_pep_380_public_domain_copy_keeps_authorship_and_statement(self):
-        text = (ROOT / "examples" / "licenses" /
-                "pep-380-public-domain.txt").read_text(encoding="utf-8")
+        text = (ROOT / "examples" / "licenses" / "pep-380-public-domain.txt").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("PEP: 380", text)
         self.assertIn("Gregory Ewing", text)
         self.assertIn("This document has been placed in the public domain.", text)
@@ -110,17 +138,27 @@ class ExampleSourceTests(unittest.TestCase):
     def test_new_samples_register_fixed_selections_and_keep_license_copies(self):
         registry = (ROOT / "examples" / "SOURCES.md").read_text(encoding="utf-8")
         anchors = {
-            "kep-753.md": ("fc09a26d4236305d3f282377ca92bdfb2b1fb03c",
-                           "keps/sig-node/753-sidecar-containers/README.md", "#kep-753"),
-            "pep-380.md": ("b39aefe6614b4e8a925d07c4b3ed47e147236dbe",
-                           "peps/pep-0380.rst", "#pep-380"),
-            "kep-1287-cri.md": ("d47a8df46c8c26d6300fd30047520e397127805c",
-                                "keps/sig-node/1287-in-place-update-pod-resources/README.md",
-                                "#kep-1287"),
+            "kep-753.md": (
+                "fc09a26d4236305d3f282377ca92bdfb2b1fb03c",
+                "keps/sig-node/753-sidecar-containers/README.md",
+                "#kep-753",
+            ),
+            "pep-380.md": (
+                "b39aefe6614b4e8a925d07c4b3ed47e147236dbe",
+                "peps/pep-0380.rst",
+                "#pep-380",
+            ),
+            "kep-1287-cri.md": (
+                "d47a8df46c8c26d6300fd30047520e397127805c",
+                "keps/sig-node/1287-in-place-update-pod-resources/README.md",
+                "#kep-1287",
+            ),
         }
         for name, (commit, path, anchor) in anchors.items():
             with self.subTest(example=name):
-                text = (ROOT / "examples" / "tech-design" / name).read_text(encoding="utf-8")
+                text = (ROOT / "examples" / "tech-design" / name).read_text(
+                    encoding="utf-8"
+                )
                 self.assertIn("/blob/" + commit + "/" + path, text)
                 self.assertIn("/blob/" + commit + "/" + path, registry)
                 self.assertIn("../SOURCES.md" + anchor, text)
@@ -141,14 +179,18 @@ class ExampleSourceTests(unittest.TestCase):
 
     def test_django_code_is_unmodified_except_document_indentation(self):
         text = (ROOT / "templates" / "how-to.md").read_text(encoding="utf-8")
-        section = text.split("### 示例（已核验局部：Django 5.2 CSV 输出）", 1)[1].split("\n---", 1)[0]
-        match = re.search(r"(?m)^```python\n(.*?)^```$", section, re.S)
+        section = text.split("### 示例（已核验局部：Django 5.2 CSV 输出）", 1)[1].split(
+            "\n---", 1
+        )[0]
+        match = re.search(r"(?m)^```python\n(.*?)^```$", section, re.DOTALL)
         if match is None:
             self.fail("Missing Django Python example")
         code = match.group(1)
         # Upstream docs/howto/outputting-csv.txt lines 18-33, dedented by four spaces.
-        self.assertEqual(hashlib.sha256(code.encode("utf-8")).hexdigest(),
-                         "4faa297cd5c7547826b5a8423f691bad9bad9c9fa7abf3b46a60701207e19974")
+        self.assertEqual(
+            hashlib.sha256(code.encode("utf-8")).hexdigest(),
+            "4faa297cd5c7547826b5a8423f691bad9bad9c9fa7abf3b46a60701207e19974",
+        )
         ast.parse(code)  # Syntax only; do not import Django or execute the view.
 
 
